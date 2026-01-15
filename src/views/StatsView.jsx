@@ -11,7 +11,7 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
     // ... (rest of state)
 
     // State for debugging/versioning
-    const APP_VERSION = "v2.1 (Debug)";
+    const APP_VERSION = "v2.2 (Layout Fix)";
 
     // Data State
     const [stats, setStats] = useState([]);
