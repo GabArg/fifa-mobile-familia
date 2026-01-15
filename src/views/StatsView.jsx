@@ -4,9 +4,11 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { PlayerCard } from '../components/PlayerCard';
 
-export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, user }) => {
+export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, user }) => {
     const [tab, setTab] = useState('GENERAL'); // GENERAL, TOURNEY, H2H, MATCHES
     const [players, setPlayers] = useState([]);
+
+    // ... (rest of state)
 
     // Data State
     const [stats, setStats] = useState([]);
@@ -448,7 +450,12 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, user }) => {
                     <div className="h-full flex flex-col">
                         <div className="flex-shrink-0 flex justify-between items-end mb-4 px-2">
                             <h2 className="view-title mb-0 text-white drop-shadow-md" style={{ fontSize: '2rem' }}>Historial de Partidos</h2>
-                            <span className="text-xs text-white/50 uppercase tracking-widest font-bold">{matches.length} Registros</span>
+                            <div className="flex flex-col items-end">
+                                <span className="text-xs text-white/50 uppercase tracking-widest font-bold">{matches.length} Registros</span>
+                                <span className={`text-[10px] font-bold px-1 rounded ${isAdmin ? 'bg-green-500 text-black' : 'bg-red-500 text-white'}`}>
+                                    ADMIN: {isAdmin ? 'ON' : 'OFF'}
+                                </span>
+                            </div>
                         </div>
 
                         {/* Column Headers (Fixed) */}
@@ -640,7 +647,10 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, user }) => {
                                         <div className="bg-green-500/20 text-green-400 p-2 rounded text-center font-bold text-sm border border-green-500/50">
                                             ✅ MODO ADMIN ACTIVO
                                         </div>
-                                        <p className="text-white/50 text-xs text-center">Sesión: {user?.email}</p>
+                                        <p className="text-white/50 text-xs text-center mb-2">Sesión: {user?.email}</p>
+                                        <Button onClick={handleLogout} className="w-full bg-red-900/50 hover:bg-red-900 text-xs py-1 mb-4 border border-red-500/30">
+                                            Cerrar Sesión
+                                        </Button>
 
                                         <div>
                                             <h4 className="text-white font-bold mb-1">Diagnóstico</h4>
