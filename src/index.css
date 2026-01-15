@@ -825,16 +825,21 @@ button {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding-bottom: 3rem;
+  padding-bottom: 1rem;
+  /* Reduced padding as grid handles its own */
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
+  /* Ensure container doesn't grow */
 }
 
 .home-header {
   text-align: center;
   margin-bottom: 2rem;
   margin-top: 1rem;
+  flex-shrink: 0;
+  /* Don't shrink header */
 }
 
 .section-title {
@@ -854,9 +859,13 @@ button {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
-  padding: 0 1rem;
+  padding: 0 1rem 2rem 1rem;
+  /* Add bottom padding */
   flex: 1;
-  /* Allow grid to fill space nicely */
+  overflow-y: auto;
+  /* Scroll internally */
+  min-height: 0;
+  /* Enable flex scrolling */
 }
 
 /* App Card */

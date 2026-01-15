@@ -83,7 +83,11 @@ export const StorageService = {
     addMatch: (match) => {
         // match: { id, date, type: 'duel'|'tourney3'|'tourney4', players: [p1_id, p2_id], scores: { [p1_id]: 2, [p2_id]: 1 }, context: {} }
         const matches = StorageService.getMatches();
-        const newMatch = { ...match, id: match.id || Date.now().toString(), date: match.date || new Date().toISOString() };
+        const newMatch = {
+            ...match,
+            id: match.id || `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            date: match.date || new Date().toISOString()
+        };
         matches.push(newMatch);
         localStorage.setItem(MATCHES_KEY, JSON.stringify(matches));
 

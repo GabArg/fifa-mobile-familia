@@ -30,7 +30,7 @@ export const PlayerSelector = ({
                 ))}
             </div>
 
-            <div className="flex justify-center gap-4">
+            <div className="flex justify-center gap-4 py-4 flex-shrink-0">
                 <Button variant="secondary" onClick={onCancel}>Volver</Button>
                 <Button disabled={!isValid} onClick={onConfirm}>
                     {confirmText}

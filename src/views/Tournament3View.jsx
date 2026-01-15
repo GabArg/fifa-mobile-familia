@@ -4,7 +4,7 @@ import { StorageService } from '../services/StorageService';
 import { PlayerSelector } from '../components/PlayerSelector';
 import MatchVersus from '../components/MatchVersus';
 
-export const Tournament3View = ({ onBack, onToggleUI }) => {
+export const Tournament3View = ({ onBack, onToggleUI, isAdmin }) => {
     const [step, setStep] = useState('SELECT');
     const [players, setPlayers] = useState([]);
     const [selectedPlayers, setSelectedPlayers] = useState([]);
@@ -17,6 +17,7 @@ export const Tournament3View = ({ onBack, onToggleUI }) => {
     }, []);
 
     const togglePlayer = (p) => {
+        if (!isAdmin) return; // Block selection
         if (selectedPlayers.find(sp => sp.id === p.id)) {
             setSelectedPlayers(selectedPlayers.filter(sp => sp.id !== p.id));
         } else {
@@ -27,6 +28,10 @@ export const Tournament3View = ({ onBack, onToggleUI }) => {
     };
 
     const startTournament = () => {
+        if (!isAdmin) {
+            alert("Solo admin");
+            return;
+        }
         if (selectedPlayers.length === 3) {
             // Triangular Matches: Double Leg (Ida y Vuelta) Grouped by Pair
             const p1 = selectedPlayers[0];
@@ -220,16 +225,23 @@ export const Tournament3View = ({ onBack, onToggleUI }) => {
 
     if (step === 'SELECT') {
         return (
-            <PlayerSelector
-                players={players}
-                selectedPlayers={selectedPlayers}
-                onToggle={togglePlayer}
-                onConfirm={startTournament}
-                onCancel={onBack}
-                title="Selecciona 3 Jugadores"
-                confirmText="Comenzar Triangular"
-                requiredCount={3}
-            />
+            <div className="relative h-full">
+                {!isAdmin && (
+                    <div className="absolute top-0 right-0 m-4 z-50 bg-red-600/20 border border-red-500 text-red-400 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                        🔒 Modo Espectador (No Admin)
+                    </div>
+                )}
+                <PlayerSelector
+                    players={players}
+                    selectedPlayers={selectedPlayers}
+                    onToggle={(p) => isAdmin ? togglePlayer(p) : alert("Solo admin")}
+                    onConfirm={startTournament}
+                    onCancel={onBack}
+                    title="Selecciona 3 Jugadores"
+                    confirmText={isAdmin ? "Comenzar Triangular" : "Solo Admin"}
+                    requiredCount={3}
+                />
+            </div>
         );
     }
 
@@ -255,6 +267,7 @@ export const Tournament3View = ({ onBack, onToggleUI }) => {
                                 onScoreChange={(field, val) => updateScore(index, field, val)}
                                 onFinish={() => finishMatch(index)}
                                 label={match.round}
+                                readOnly={!isAdmin} // Pass readOnly
                             />
                         </div>
                     ))}

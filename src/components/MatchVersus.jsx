@@ -9,7 +9,8 @@ const MatchVersus = ({
     onScoreChange,
     onFinish,
     isFinished,
-    label = "VS"
+    label = "VS",
+    readOnly = false // New prop
 }) => {
     return (
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '10px 0', opacity: 1 }}>
@@ -60,22 +61,38 @@ const MatchVersus = ({
                             <input
                                 type="number"
                                 value={score1}
-                                onChange={(e) => onScoreChange('score1', e.target.value)}
-                                style={{ width: '50px', height: '50px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', textAlign: 'center', color: 'white', fontSize: '24px', fontWeight: 'bold' }}
-                                placeholder="-"
+                                onChange={(e) => !readOnly && onScoreChange('score1', e.target.value)}
+                                disabled={readOnly}
+                                style={{
+                                    width: '50px', height: '50px',
+                                    background: readOnly ? 'transparent' : 'rgba(255,255,255,0.05)',
+                                    border: readOnly ? 'none' : '1px solid rgba(255,255,255,0.2)',
+                                    borderRadius: '8px', textAlign: 'center', color: 'white',
+                                    fontSize: '24px', fontWeight: 'bold',
+                                    cursor: readOnly ? 'default' : 'text'
+                                }}
+                                placeholder={readOnly ? "-" : "-"}
                             />
                             <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 'bold', fontSize: '20px' }}>:</span>
                             <input
                                 type="number"
                                 value={score2}
-                                onChange={(e) => onScoreChange('score2', e.target.value)}
-                                style={{ width: '50px', height: '50px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', textAlign: 'center', color: 'white', fontSize: '24px', fontWeight: 'bold' }}
-                                placeholder="-"
+                                onChange={(e) => !readOnly && onScoreChange('score2', e.target.value)}
+                                disabled={readOnly}
+                                style={{
+                                    width: '50px', height: '50px',
+                                    background: readOnly ? 'transparent' : 'rgba(255,255,255,0.05)',
+                                    border: readOnly ? 'none' : '1px solid rgba(255,255,255,0.2)',
+                                    borderRadius: '8px', textAlign: 'center', color: 'white',
+                                    fontSize: '24px', fontWeight: 'bold',
+                                    cursor: readOnly ? 'default' : 'text'
+                                }}
+                                placeholder={readOnly ? "-" : "-"}
                             />
                         </div>
                     )}
 
-                    {!isFinished && onFinish && (
+                    {!isFinished && onFinish && !readOnly && (
                         <button
                             onClick={onFinish}
                             style={{ marginTop: '8px', fontSize: '11px', color: '#ccff00', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', background: 'none', border: 'none', cursor: 'pointer' }}

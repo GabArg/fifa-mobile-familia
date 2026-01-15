@@ -6,7 +6,7 @@ import { Button } from '../components/Button';
 import MatchVersus from '../components/MatchVersus'; // New Component
 import { useAudio } from '../hooks/useAudio';
 
-export const DuelView = ({ onBack }) => {
+export const DuelView = ({ onBack, isAdmin }) => {
     const [step, setStep] = useState('SELECT'); // SELECT, PLAY, RESULT
     const [players, setPlayers] = useState([]);
     const [selectedPlayers, setSelectedPlayers] = useState([]);
@@ -30,6 +30,10 @@ export const DuelView = ({ onBack }) => {
     };
 
     const startDuel = () => {
+        if (!isAdmin) {
+            alert("Solo el administrador puede iniciar duelos.");
+            return;
+        }
         if (selectedPlayers.length === 2) {
             // Initialize with 2 legs
             setMatches([
@@ -108,16 +112,24 @@ export const DuelView = ({ onBack }) => {
 
     if (step === 'SELECT') {
         return (
-            <PlayerSelector
-                players={players}
-                selectedPlayers={selectedPlayers}
-                onToggle={togglePlayer}
-                onConfirm={startDuel}
-                onCancel={onBack}
-                title="Selecciona 2 Rivales"
-                confirmText="Comenzar Duelo"
-                requiredCount={2}
-            />
+            <div className="relative h-full">
+                {!isAdmin && (
+                    <div className="absolute top-0 right-0 m-4 z-50 bg-red-600/20 border border-red-500 text-red-400 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                        🔒 Modo Espectador (No Admin)
+                    </div>
+                )}
+                <PlayerSelector
+                    players={players}
+                    selectedPlayers={selectedPlayers}
+                    onToggle={(p) => isAdmin ? togglePlayer(p) : alert("Solo el administrador puede seleccionar jugadores.")}
+                    onConfirm={startDuel}
+                    onCancel={onBack}
+                    title="Selecciona 2 Rivales"
+                    confirmText={isAdmin ? "Comenzar Duelo" : "Solo Admin"}
+                    requiredCount={2}
+                    disabled={!isAdmin} // Assuming PlayerSelector has disabled logic, but adding alert above just in case
+                />
+            </div>
         );
     }
 
@@ -193,6 +205,7 @@ export const DuelView = ({ onBack }) => {
                                 score2={match.scoreAway}
                                 onScoreChange={(field, val) => updateMatchScore(index, field, val)}
                                 label="VS"
+                                readOnly={!isAdmin} // Pass readOnly
                             />
                         </div>
                     ))}
@@ -215,23 +228,25 @@ export const DuelView = ({ onBack }) => {
                     >
                         Cancelar
                     </button>
-                    <button
-                        onClick={finishDuel}
-                        style={{
-                            padding: '0.75rem 2rem',
-                            backgroundColor: '#ccff00',
-                            color: 'black',
-                            fontWeight: '900',
-                            borderRadius: '999px',
-                            border: 'none',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            cursor: 'pointer',
-                            boxShadow: '0 0 20px rgba(204,255,0,0.3)'
-                        }}
-                    >
-                        {matches.length > 2 && matches.every(m => m.scoreHome && m.scoreAway) ? 'Verificar Resultado' : 'Finalizar Duelo'}
-                    </button>
+                    {isAdmin && (
+                        <button
+                            onClick={finishDuel}
+                            style={{
+                                padding: '0.75rem 2rem',
+                                backgroundColor: '#ccff00',
+                                color: 'black',
+                                fontWeight: '900',
+                                borderRadius: '999px',
+                                border: 'none',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
+                                cursor: 'pointer',
+                                boxShadow: '0 0 20px rgba(204,255,0,0.3)'
+                            }}
+                        >
+                            {matches.length > 2 && matches.every(m => m.scoreHome && m.scoreAway) ? 'Verificar Resultado' : 'Finalizar Duelo'}
+                        </button>
+                    )}
                 </div>
             </div>
         );

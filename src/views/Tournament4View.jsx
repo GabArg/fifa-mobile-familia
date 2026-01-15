@@ -4,7 +4,7 @@ import { StorageService } from '../services/StorageService';
 import TournamentBracket from '../components/TournamentBracket';
 import { useAudio } from '../hooks/useAudio';
 
-export const Tournament4View = ({ onBack, onToggleUI }) => {
+export const Tournament4View = ({ onBack, onToggleUI, isAdmin }) => {
     const [step, setStep] = useState('LOADING');
 
     // Dynamic Stages State
@@ -20,13 +20,18 @@ export const Tournament4View = ({ onBack, onToggleUI }) => {
     const [champion, setChampion] = useState(null);
 
     useEffect(() => {
+        if (!isAdmin) {
+            setStep('LOCKED');
+            return;
+        }
+
         const allPlayers = StorageService.getPlayers();
         if (allPlayers.length >= 4) {
             startTournament(allPlayers);
         } else {
             console.warn("Not enough players for Tournament 4");
         }
-    }, []);
+    }, [isAdmin]);
 
     const startTournament = (availablePlayers) => {
         const shuffled = [...availablePlayers].sort(() => 0.5 - Math.random());
@@ -225,6 +230,22 @@ export const Tournament4View = ({ onBack, onToggleUI }) => {
         onBack();
     };
 
+    if (step === 'LOCKED') {
+        return (
+            <div className="pt-24 min-h-screen flex flex-col items-center justify-center text-center px-4">
+                <div className="text-6xl mb-4">🔒</div>
+                <h2 className="text-2xl font-bold text-white uppercase tracking-widest mb-2">Modo Espectador</h2>
+                <p className="text-white/50 mb-8">Solo el administrador puede sortear e iniciar torneos.</p>
+                <button
+                    onClick={onBack}
+                    className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-full transition-all uppercase tracking-wider"
+                >
+                    Volver
+                </button>
+            </div>
+        );
+    }
+
     if (step === 'LOADING') {
         return (
             <div className="pt-24 min-h-screen flex items-center justify-center">
@@ -238,12 +259,18 @@ export const Tournament4View = ({ onBack, onToggleUI }) => {
             <div className="text-center mb-6">
                 <h1 className="text-3xl font-black text-white italic tracking-tighter drop-shadow-lg">COPA DE 4</h1>
                 <div className="h-1 w-16 bg-[#ccff00] mx-auto mt-2 rounded-full shadow-[0_0_15px_#ccff00]"></div>
+                {!isAdmin && (
+                    <div className="text-red-400 text-xs font-bold uppercase tracking-widest mt-2 flex items-center justify-center gap-2">
+                        🔒 Modo Lectura
+                    </div>
+                )}
             </div>
 
             <TournamentBracket
                 stages={stages}
                 onUpdateScore={updateScore}
                 onFinishMatch={finishMatch}
+                readOnly={!isAdmin} // Pass readOnly
             />
 
             {champion && (
