@@ -147,7 +147,7 @@ export const StorageService = {
         return false;
     },
 
-    deleteMatch: (matchId) => {
+    deleteMatch: async (matchId) => {
         const matches = StorageService.getMatches();
         const initialLength = matches.length;
         const filtered = matches.filter(m => m.id !== matchId);
