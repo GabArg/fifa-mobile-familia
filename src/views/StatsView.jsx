@@ -459,7 +459,7 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                     <div className="h-full flex flex-col">
                         <div className="flex-shrink-0 flex justify-between items-end mb-4 px-2">
                             <h2 className="view-title mb-0 text-white drop-shadow-md" style={{ fontSize: '2rem' }}>Historial de Partidos</h2>
-                            <div className="flex flex-col items-end">
+                            <div className="flex flex-col items-end gap-1">
                                 <span className="text-xs text-white/50 uppercase tracking-widest font-bold">{matches.length} Registros</span>
                                 <span className={`text-[10px] font-bold px-1 rounded ${isAdmin ? 'bg-green-500 text-black' : 'bg-red-500 text-white'}`}>
                                     ADMIN: {isAdmin ? 'ON' : 'OFF'}
