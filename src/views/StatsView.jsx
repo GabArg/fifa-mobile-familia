@@ -643,6 +643,22 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, user }) => {
                                         <p className="text-white/50 text-xs text-center">Sesión: {user?.email}</p>
 
                                         <div>
+                                            <h4 className="text-white font-bold mb-1">Diagnóstico</h4>
+                                            <Button onClick={async () => {
+                                                try {
+                                                    const { CloudService } = await import('../services/CloudService');
+                                                    alert("🔍 Iniciando diagnóstico...\n\nSi esto se queda cargando, hay problemas de conexión/permisos.");
+                                                    const report = await CloudService.runDiagnostics();
+                                                    alert(`📊 REPORTE DE ESTADO:\n\n🌍 NUBE:\n- Partidos: ${report.cloudMatches}\n- Torneos: ${report.cloudTournaments}\n\n📱 LOCAL:\n- Partidos: ${StorageService.getMatches().length}\n- Torneos: ${StorageService.getTournaments().length}\n\n${report.cloudMatches > 0 ? "⚠️ HAY DATOS EN LA NUBE QUE NO SE BORRARON" : "✅ Nube limpia"}`);
+                                                } catch (e) {
+                                                    alert("❌ Error Diagnóstico: " + e.message);
+                                                }
+                                            }} className="w-full bg-yellow-600 hover:bg-yellow-500 mb-2">
+                                                🔍 Test Conexión Nube
+                                            </Button>
+                                        </div>
+
+                                        <div>
                                             <h4 className="text-white font-bold mb-1">Sincronización Inicial</h4>
                                             <Button onClick={async () => {
                                                 if (confirm("¿Subir todos los datos locales a la nube?")) {

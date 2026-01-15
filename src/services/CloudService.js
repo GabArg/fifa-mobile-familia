@@ -59,6 +59,24 @@ export const CloudService = {
         }
     },
 
+    runDiagnostics: async () => {
+        try {
+            const mQ = query(collection(db, COLLECTIONS.MATCHES));
+            const tQ = query(collection(db, COLLECTIONS.TOURNAMENTS));
+
+            const mSnap = await getDocs(mQ);
+            const tSnap = await getDocs(tQ);
+
+            return {
+                cloudMatches: mSnap.size,
+                cloudTournaments: tSnap.size
+            };
+        } catch (e) {
+            console.error("DIAGNOSTIC ERROR", e);
+            throw e;
+        }
+    },
+
     syncFromCloud: async (onDataUpdated) => {
         try {
             console.log("Starting Cloud Sync...");
