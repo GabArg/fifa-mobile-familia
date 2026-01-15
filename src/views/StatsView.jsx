@@ -10,6 +10,9 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
 
     // ... (rest of state)
 
+    // State for debugging/versioning
+    const APP_VERSION = "v2.1 (Debug)";
+
     // Data State
     const [stats, setStats] = useState([]);
     const [matches, setMatches] = useState([]);
@@ -260,8 +263,13 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                 {/* TOURNAMENT TAB */}
                 {tab === 'TOURNEY' && (
                     <>
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="view-title">Por Torneo</h2>
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <Button onClick={onBack} className="bg-transparent border border-white/20 text-white hover:bg-white/10 text-sm">
+                                    « Volver
+                                </Button>
+                                <span className="text-[10px] text-white/30 ml-2 font-mono">{APP_VERSION}</span>
+                            </div>
                             <select
                                 className="bg-black text-white border border-white/20 p-2 rounded"
                                 value={tourneyFilter}
