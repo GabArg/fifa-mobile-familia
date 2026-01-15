@@ -14,40 +14,48 @@ export const CloudService = {
     // --- Actions (Admin Only) ---
     deleteAllData: async () => {
         try {
-            const batch = writeBatch(db);
+            // Function to commit batches in chunks of 450 (limit is 500)
+            const deleteCollection = async (collectionName) => {
+                const q = query(collection(db, collectionName));
+                const snapshot = await getDocs(q);
+                const docs = snapshot.docs;
 
-            // 1. Delete Matches
-            const matchesSnapshot = await getDocs(collection(db, COLLECTIONS.MATCHES));
-            matchesSnapshot.forEach((doc) => {
-                batch.delete(doc.ref);
-            });
+                const chunk_size = 450;
+                for (let i = 0; i < docs.length; i += chunk_size) {
+                    const chunk = docs.slice(i, i + chunk_size);
+                    const batch = writeBatch(db);
+                    chunk.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                }
+            };
 
-            // 2. Delete Tournaments
-            const tournamentsSnapshot = await getDocs(collection(db, COLLECTIONS.TOURNAMENTS));
-            tournamentsSnapshot.forEach((doc) => {
-                batch.delete(doc.ref);
-            });
+            await deleteCollection(COLLECTIONS.MATCHES);
+            await deleteCollection(COLLECTIONS.TOURNAMENTS);
 
-            // 3. Reset Players (Don't delete, just reset stats)
-            // We need to fetch current players first or just overwrite with defaults?
-            // Safer to overwrite with defaults logic but keeping ID/Name/Image if possible.
-            // For now, let's fetch current players and reset their stats fields.
+            // Reset Players (Chunked update)
             const playersSnapshot = await getDocs(collection(db, COLLECTIONS.PLAYERS));
-            playersSnapshot.forEach((doc) => {
-                const p = doc.data();
-                const resetPlayer = {
-                    ...p,
-                    points: 0, matchesPlayed: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0
-                };
-                batch.set(doc.ref, resetPlayer);
-            });
+            const playerDocs = playersSnapshot.docs;
+            const chunk_size = 450;
 
-            await batch.commit();
+            for (let i = 0; i < playerDocs.length; i += chunk_size) {
+                const chunk = playerDocs.slice(i, i + chunk_size);
+                const batch = writeBatch(db);
+                chunk.forEach(doc => {
+                    const p = doc.data();
+                    const resetPlayer = {
+                        ...p,
+                        points: 0, matchesPlayed: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0
+                    };
+                    batch.set(doc.ref, resetPlayer);
+                });
+                await batch.commit();
+            }
+
             console.log("ALL CLOUD DATA DELETED/RESET");
             return true;
         } catch (e) {
             console.error("Error deleting cloud data:", e);
-            throw e;
+            throw e; // Propagate error so UI knows
         }
     },
 

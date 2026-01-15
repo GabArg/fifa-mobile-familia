@@ -1,5 +1,5 @@
 import { db } from '../config/firebase';
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, deleteDoc } from "firebase/firestore";
 
 const PLAYERS_KEY = 'fifa_players';
 const MATCHES_KEY = 'fifa_matches';
@@ -109,6 +109,36 @@ export const StorageService = {
             StorageService._overwriteMatches(matches); // This triggers recalc
             // Cloud Sync
             StorageService._pushToCloud('matches', updatedMatch);
+            return true;
+        }
+        return false;
+    },
+
+    deleteMatch: (matchId) => {
+        const matches = StorageService.getMatches();
+        const initialLength = matches.length;
+        const filtered = matches.filter(m => m.id !== matchId);
+
+        if (filtered.length !== initialLength) {
+            StorageService._overwriteMatches(filtered); // Recalcs stats
+
+            // Cloud Sync
+            if (db) {
+                // We need a delete method in CloudService, or just do it here?
+                // Better to call CloudService to keep logic separated, but we can't import CloudService here easily due to circular deps if not careful.
+                // Actually CloudService imports StorageService. So StorageService should NOT import CloudService.
+                // We will handle Cloud deletion in the View or via a callback? 
+                // Alternatively, we can use the db instance here directly as we do for _pushToCloud.
+                try {
+                    const { deleteDoc, doc } = require("firebase/firestore");
+                    // Wait, we are using ES modules import at top.
+                    // We can just use deleteDoc directly.
+                    deleteDoc(doc(db, 'matches', matchId.toString()));
+                    console.log(`Cloud: Deleted match ${matchId}`);
+                } catch (e) {
+                    console.error("Error deleting from cloud", e);
+                }
+            }
             return true;
         }
         return false;

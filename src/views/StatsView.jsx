@@ -559,15 +559,32 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, user }) => {
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <button
-                                                    onClick={() => {
-                                                        setEditingMatchId(m.id);
-                                                        setEditScores({ s1: m.scores[p1.id], s2: m.scores[p2.id] });
-                                                    }}
-                                                    className="text-white/20 hover:text-white transition-colors"
-                                                >
-                                                    ✏️
-                                                </button>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditingMatchId(m.id);
+                                                            setEditScores({ s1: m.scores[p1.id], s2: m.scores[p2.id] });
+                                                        }}
+                                                        className="text-white/20 hover:text-white transition-colors"
+                                                        title="Editar Resultado"
+                                                    >
+                                                        ✏️
+                                                    </button>
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (confirm('¿Borrar este partido?')) {
+                                                                StorageService.deleteMatch(m.id);
+                                                                // Reload
+                                                                loadStats({});
+                                                                setMatches(StorageService.getMatches().sort((a, b) => new Date(b.date) - new Date(a.date)));
+                                                            }
+                                                        }}
+                                                        className="text-red-500/50 hover:text-red-500 transition-colors"
+                                                        title="Borrar Partido"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     )
