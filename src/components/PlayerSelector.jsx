@@ -30,9 +30,11 @@ export const PlayerSelector = ({
                 ))}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', padding: '1rem 0', flexShrink: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', paddingTop: '1.5rem' }}>
-                <Button variant="secondary" onClick={onCancel} style={{ boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>Volver</Button>
-                <Button disabled={!isValid} onClick={onConfirm} style={{ boxShadow: '0 0 10px 2px rgba(50, 224, 196, 0.5)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', padding: '1rem', flexShrink: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.6))', backdropFilter: 'blur(4px)', width: '100%', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <Button variant="secondary" onClick={onCancel} style={{ flex: 1, maxWidth: '150px', boxShadow: '0 4px 6px rgba(0,0,0,0.3)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                    Volver
+                </Button>
+                <Button disabled={!isValid} onClick={onConfirm} style={{ flex: 2, maxWidth: '300px', boxShadow: '0 0 15px rgba(50, 224, 196, 0.4)' }}>
                     {confirmText}
                 </Button>
             </div>
