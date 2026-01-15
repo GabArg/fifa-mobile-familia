@@ -61,13 +61,13 @@ export const DuelView = ({ onBack, isAdmin }) => {
         if (incomplete) return;
 
         // Save matches to history
-        matches.forEach(m => {
-            StorageService.addMatch({
-                type: 'duel',
-                players: [m.home.id, m.away.id],
-                scores: { [m.home.id]: parseInt(m.scoreHome), [m.away.id]: parseInt(m.scoreAway) }
-            });
-        });
+        // Save matches to history (Batch)
+        const matchesToSave = matches.map(m => ({
+            type: 'duel',
+            players: [m.home.id, m.away.id],
+            scores: { [m.home.id]: parseInt(m.scoreHome), [m.away.id]: parseInt(m.scoreAway) }
+        }));
+        StorageService.addMatches(matchesToSave);
 
         const p1 = selectedPlayers[0];
         const p2 = selectedPlayers[1];

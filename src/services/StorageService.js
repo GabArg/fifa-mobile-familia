@@ -1,5 +1,5 @@
 import { db } from '../config/firebase';
-import { doc, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 
 const PLAYERS_KEY = 'fifa_players';
 const MATCHES_KEY = 'fifa_matches';
@@ -78,6 +78,39 @@ export const StorageService = {
     getMatches: () => {
         const stored = localStorage.getItem(MATCHES_KEY);
         return stored ? JSON.parse(stored) : [];
+    },
+
+    addMatches: (newMatches) => {
+        const matches = StorageService.getMatches();
+
+        // Prepare local updates
+        const matchesToAdd = newMatches.map(m => ({
+            ...m,
+            id: m.id || `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            date: m.date || new Date().toISOString()
+        }));
+
+        const updatedMatches = [...matches, ...matchesToAdd];
+        localStorage.setItem(MATCHES_KEY, JSON.stringify(updatedMatches));
+
+        // Update Stats for all
+        matchesToAdd.forEach(m => StorageService._updatePlayerStatsFromMatch(m));
+
+        // Cloud Sync (Batch)
+        if (db) {
+            try {
+                const batch = writeBatch(db);
+                matchesToAdd.forEach(m => {
+                    const ref = doc(db, 'matches', m.id.toString());
+                    batch.set(ref, m);
+                });
+                batch.commit().then(() => console.log(`Cloud: Batched ${matchesToAdd.length} matches`));
+            } catch (e) {
+                console.error("Cloud batch push failed", e);
+            }
+        }
+
+        return matchesToAdd;
     },
 
     addMatch: (match) => {
