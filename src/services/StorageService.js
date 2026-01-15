@@ -100,6 +100,20 @@ export const StorageService = {
         return newMatch;
     },
 
+    updateMatch: (updatedMatch) => {
+        const matches = StorageService.getMatches();
+        const index = matches.findIndex(m => m.id === updatedMatch.id);
+        if (index !== -1) {
+            matches[index] = updatedMatch;
+            // Overwrite and Recalc
+            StorageService._overwriteMatches(matches); // This triggers recalc
+            // Cloud Sync
+            StorageService._pushToCloud('matches', updatedMatch);
+            return true;
+        }
+        return false;
+    },
+
     // --- Cloud Sync Helpers ---
     _overwriteMatches: (matches) => {
         localStorage.setItem(MATCHES_KEY, JSON.stringify(matches));
