@@ -385,6 +385,7 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                                         <div style={{ flex: 1, textAlign: 'right' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Local</div>
                                         <div style={{ width: '88px', textAlign: 'center' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Res</div>
                                         <div style={{ flex: 1, textAlign: 'left' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Visita</div>
+                                        {isAdmin && <div style={{ width: '80px', textAlign: 'center' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Acciones</div>}
                                         <div style={{ width: '80px', textAlign: 'center' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Torneo</div>
                                     </div>
 
@@ -482,6 +483,7 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                             <div style={{ flex: 1, textAlign: 'right' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Local</div>
                             <div style={{ width: '88px', textAlign: 'center' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Res</div>
                             <div style={{ flex: 1, textAlign: 'left' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Visita</div>
+                            {isAdmin && <div style={{ width: '80px', textAlign: 'center' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Acciones</div>}
                             <div style={{ width: '80px', textAlign: 'center' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Torneo</div>
                         </div>
 
