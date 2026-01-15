@@ -541,68 +541,66 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, user }) => {
                                         <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }} className={`truncate ${p2Won ? 'text-white' : 'text-gray-500'}`}>{p2.name}</span>
 
                                         {/* 7. ACTIONS (Admin Only) */}
-                                        {
-                                            isAdmin && (
-                                                <div style={{ width: '80px', flexShrink: 0, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
-                                                    {editingMatchId === m.id ? (
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                onClick={async () => {
-                                                                    const s1 = parseInt(editScores.s1);
-                                                                    const s2 = parseInt(editScores.s2);
-                                                                    if (isNaN(s1) || isNaN(s2)) return;
+                                        {isAdmin ? (
+                                            <div style={{ width: '80px', flexShrink: 0, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+                                                {editingMatchId === m.id ? (
+                                                    <div className="flex gap-1">
+                                                        <button
+                                                            onClick={async () => {
+                                                                const s1 = parseInt(editScores.s1);
+                                                                const s2 = parseInt(editScores.s2);
+                                                                if (isNaN(s1) || isNaN(s2)) return;
 
-                                                                    const updated = { ...m, scores: { [p1.id]: s1, [p2.id]: s2 } };
-                                                                    StorageService.updateMatch(updated);
-
-                                                                    // Reload stats locally
+                                                                const updated = { ...m, scores: { [p1.id]: s1, [p2.id]: s2 } };
+                                                                StorageService.updateMatch(updated);
+                                                                loadStats({});
+                                                                setMatches(StorageService.getMatches().sort((a, b) => new Date(b.date) - new Date(a.date)));
+                                                                setEditingMatchId(null);
+                                                            }}
+                                                            className="bg-green-500 text-black px-2 rounded text-xs font-bold hover:bg-green-400"
+                                                        >
+                                                            ✓
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setEditingMatchId(null)}
+                                                            className="bg-red-500 text-white px-2 rounded text-xs font-bold hover:bg-red-400"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex gap-1 items-center justify-center bg-black/40 rounded px-1 border border-white/10">
+                                                        <button
+                                                            onClick={() => {
+                                                                setEditingMatchId(m.id);
+                                                                setEditScores({ s1: m.scores[p1.id], s2: m.scores[p2.id] });
+                                                            }}
+                                                            className="text-yellow-400 hover:text-yellow-200 transition-colors p-1"
+                                                            title="Editar Resultado"
+                                                        >
+                                                            ✏️
+                                                        </button>
+                                                        <button
+                                                            onClick={async () => {
+                                                                if (confirm('¿Borrar este partido?')) {
+                                                                    StorageService.deleteMatch(m.id);
                                                                     loadStats({});
                                                                     setMatches(StorageService.getMatches().sort((a, b) => new Date(b.date) - new Date(a.date)));
-
-                                                                    setEditingMatchId(null);
-                                                                }}
-                                                                className="bg-green-500 text-black px-2 rounded text-xs font-bold hover:bg-green-400"
-                                                            >
-                                                                ✓
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setEditingMatchId(null)}
-                                                                className="bg-red-500 text-white px-2 rounded text-xs font-bold hover:bg-red-400"
-                                                            >
-                                                                ✕
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setEditingMatchId(m.id);
-                                                                    setEditScores({ s1: m.scores[p1.id], s2: m.scores[p2.id] });
-                                                                }}
-                                                                className="text-white/20 hover:text-white transition-colors"
-                                                                title="Editar Resultado"
-                                                            >
-                                                                ✏️
-                                                            </button>
-                                                            <button
-                                                                onClick={async () => {
-                                                                    if (confirm('¿Borrar este partido?')) {
-                                                                        StorageService.deleteMatch(m.id);
-                                                                        // Reload
-                                                                        loadStats({});
-                                                                        setMatches(StorageService.getMatches().sort((a, b) => new Date(b.date) - new Date(a.date)));
-                                                                    }
-                                                                }}
-                                                                className="text-red-500/50 hover:text-red-500 transition-colors"
-                                                                title="Borrar Partido"
-                                                            >
-                                                                🗑️
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )
-                                        }
+                                                                }
+                                                            }}
+                                                            className="text-red-500 hover:text-red-300 transition-colors p-1"
+                                                            title="Borrar Partido"
+                                                            style={{ fontSize: '1.2em' }}
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            /* DEBUG: Show placeholder if not admin, to see if column exists */
+                                            <div style={{ width: '1px' }}></div>
+                                        )}
 
                                         {/* 8. TOURNAMENT LABEL (Hidden if editing? No, keep it) */}
                                         {
