@@ -63,14 +63,29 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, user }) => {
     };
 
     const handleReset = async () => {
-        if (confirm('⚠️ PELIGRO ⚠️\n\n¿Estás SEGURO de borrar TODO?\nEsto eliminará todos los partidos, torneos y estadísticas.\nEs como volver a instalar la app.')) {
-            if (confirm('¿De verdad? No hay vuelta atrás.')) {
-                if (isAdmin) {
+        if (!isAdmin) {
+            alert("❌ ERROR: No estás detectado como Administrador.\n\nInicia sesión en la pestaña DATOS (botón verde) para poder borrar la nube.");
+            return;
+        }
+
+        if (confirm('⚠️ PELIGRO NUCLEAR ⚠️\n\n¿Estás 100% SEGURO de borrar TODA la base de datos de la Nube y el Local?\n\nEsto eliminará permanentemente todos los partidos y torneos.')) {
+            if (confirm('¿Última oportunidad? Escribe "SI" (mentalmente) y dale Aceptar.')) {
+                try {
                     const { CloudService } = await import('../services/CloudService');
+
+                    // Show loading state or at least prevent navigation
+                    document.body.style.cursor = 'wait';
+
                     await CloudService.deleteAllData();
+
+                    alert('✅ BASE DE DATOS BORRADA EN LA NUBE.\n\nLa aplicación se recargará ahora como nueva.');
+
+                    StorageService.resetStats();
+                    window.location.reload();
+                } catch (e) {
+                    alert('❌ Error borrando nube: ' + e.message);
+                    document.body.style.cursor = 'default';
                 }
-                StorageService.resetStats();
-                window.location.reload();
             }
         }
     };
@@ -524,193 +539,192 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, user }) => {
                                         )}
 
                                         <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }} className={`truncate ${p2Won ? 'text-white' : 'text-gray-500'}`}>{p2.name}</span>
-                                    </div>
 
-                                        {/* 7. ACTIONS (Admin Only) */ }
-                                {
-                                    isAdmin && (
-                                        <div style={{ width: '80px', flexShrink: 0, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
-                                            {editingMatchId === m.id ? (
-                                                <div className="flex gap-1">
-                                                    <button
-                                                        onClick={async () => {
-                                                            const s1 = parseInt(editScores.s1);
-                                                            const s2 = parseInt(editScores.s2);
-                                                            if (isNaN(s1) || isNaN(s2)) return;
+                                        {/* 7. ACTIONS (Admin Only) */}
+                                        {
+                                            isAdmin && (
+                                                <div style={{ width: '80px', flexShrink: 0, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+                                                    {editingMatchId === m.id ? (
+                                                        <div className="flex gap-1">
+                                                            <button
+                                                                onClick={async () => {
+                                                                    const s1 = parseInt(editScores.s1);
+                                                                    const s2 = parseInt(editScores.s2);
+                                                                    if (isNaN(s1) || isNaN(s2)) return;
 
-                                                            const updated = { ...m, scores: { [p1.id]: s1, [p2.id]: s2 } };
-                                                            StorageService.updateMatch(updated);
+                                                                    const updated = { ...m, scores: { [p1.id]: s1, [p2.id]: s2 } };
+                                                                    StorageService.updateMatch(updated);
 
-                                                            // Reload stats locally
-                                                            loadStats({});
-                                                            setMatches(StorageService.getMatches().sort((a, b) => new Date(b.date) - new Date(a.date)));
+                                                                    // Reload stats locally
+                                                                    loadStats({});
+                                                                    setMatches(StorageService.getMatches().sort((a, b) => new Date(b.date) - new Date(a.date)));
 
-                                                            setEditingMatchId(null);
-                                                        }}
-                                                        className="bg-green-500 text-black px-2 rounded text-xs font-bold hover:bg-green-400"
-                                                    >
-                                                        ✓
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setEditingMatchId(null)}
-                                                        className="bg-red-500 text-white px-2 rounded text-xs font-bold hover:bg-red-400"
-                                                    >
-                                                        ✕
-                                                    </button>
+                                                                    setEditingMatchId(null);
+                                                                }}
+                                                                className="bg-green-500 text-black px-2 rounded text-xs font-bold hover:bg-green-400"
+                                                            >
+                                                                ✓
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingMatchId(null)}
+                                                                className="bg-red-500 text-white px-2 rounded text-xs font-bold hover:bg-red-400"
+                                                            >
+                                                                ✕
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditingMatchId(m.id);
+                                                                    setEditScores({ s1: m.scores[p1.id], s2: m.scores[p2.id] });
+                                                                }}
+                                                                className="text-white/20 hover:text-white transition-colors"
+                                                                title="Editar Resultado"
+                                                            >
+                                                                ✏️
+                                                            </button>
+                                                            <button
+                                                                onClick={async () => {
+                                                                    if (confirm('¿Borrar este partido?')) {
+                                                                        StorageService.deleteMatch(m.id);
+                                                                        // Reload
+                                                                        loadStats({});
+                                                                        setMatches(StorageService.getMatches().sort((a, b) => new Date(b.date) - new Date(a.date)));
+                                                                    }
+                                                                }}
+                                                                className="text-red-500/50 hover:text-red-500 transition-colors"
+                                                                title="Borrar Partido"
+                                                            >
+                                                                🗑️
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            ) : (
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setEditingMatchId(m.id);
-                                                            setEditScores({ s1: m.scores[p1.id], s2: m.scores[p2.id] });
-                                                        }}
-                                                        className="text-white/20 hover:text-white transition-colors"
-                                                        title="Editar Resultado"
-                                                    >
-                                                        ✏️
-                                                    </button>
-                                                    <button
-                                                        onClick={async () => {
-                                                            if (confirm('¿Borrar este partido?')) {
-                                                                StorageService.deleteMatch(m.id);
-                                                                // Reload
-                                                                loadStats({});
-                                                                setMatches(StorageService.getMatches().sort((a, b) => new Date(b.date) - new Date(a.date)));
-                                                            }
-                                                        }}
-                                                        className="text-red-500/50 hover:text-red-500 transition-colors"
-                                                        title="Borrar Partido"
-                                                    >
-                                                        🗑️
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )
-                                }
+                                            )
+                                        }
 
-                                {/* 8. TOURNAMENT LABEL (Hidden if editing? No, keep it) */ }
-                                {
-                                    !editingMatchId && (
-                                        <div style={{ width: '80px', flexShrink: 0, textAlign: 'center' }} className="text-[10px] uppercase text-[--primary] tracking-wider font-bold">
-                                            {typeLabel}
-                                        </div>
-                                    )
-                                }
+                                        {/* 8. TOURNAMENT LABEL (Hidden if editing? No, keep it) */}
+                                        {
+                                            !editingMatchId && (
+                                                <div style={{ width: '80px', flexShrink: 0, textAlign: 'center' }} className="text-[10px] uppercase text-[--primary] tracking-wider font-bold">
+                                                    {typeLabel}
+                                                </div>
+                                            )
+                                        }
                                     </div>
-                        );
+                                );
                             })}
-                    </div>
-                    </div>
-    )
-}
-
-{/* DATA MANAGEMENT TAB */ }
-{
-    tab === 'DATA' && (
-        <div className="flex flex-col h-full gap-6 overflow-y-auto">
-            <div className="mb-4">
-                <h2 className="view-title mb-2">Gestión de Datos</h2>
-                <p className="text-white/50 text-sm">
-                    Aquí puedes guardar una copia de seguridad de toda la información o restaurarla en otro dispositivo.
-                </p>
-            </div>
-
-            {/* CLOUD & ADMIN SECTION */}
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-6">
-                <h3 className="text-blue-400 font-bold text-lg mb-4 flex items-center gap-2">
-                    <span className="text-2xl">☁️</span> Nube & Admin
-                </h3>
-
-                {isAdmin ? (
-                    <div className="flex flex-col gap-4">
-                        <div className="bg-green-500/20 text-green-400 p-2 rounded text-center font-bold text-sm border border-green-500/50">
-                            ✅ MODO ADMIN ACTIVO
-                        </div>
-                        <p className="text-white/50 text-xs text-center">Sesión: {user?.email}</p>
-
-                        <div>
-                            <h4 className="text-white font-bold mb-1">Sincronización Inicial</h4>
-                            <Button onClick={async () => {
-                                if (confirm("¿Subir todos los datos locales a la nube?")) {
-                                    const { CloudService } = await import('../services/CloudService');
-                                    await CloudService.uploadLocalData();
-                                    alert("¡Datos subidos!");
-                                }
-                            }} className="w-full btn-primary bg-blue-600 hover:bg-blue-500">
-                                🚀 Subir Datos Locales
-                            </Button>
                         </div>
                     </div>
-                ) : (
-                    <div className="flex flex-col gap-3">
-                        <p className="text-white/50 text-xs">Inicia sesión para gestionar la nube.</p>
+                )
+                }
 
-                        <Button onClick={handleGoogleLogin} className="w-full bg-white text-black hover:bg-gray-200">
-                            <div className="flex items-center justify-center gap-2">
-                                <span className="text-xl">🇬</span>
-                                <span>Iniciar con Google</span>
+                {/* DATA MANAGEMENT TAB */}
+                {
+                    tab === 'DATA' && (
+                        <div className="flex flex-col h-full gap-6 overflow-y-auto">
+                            <div className="mb-4">
+                                <h2 className="view-title mb-2">Gestión de Datos</h2>
+                                <p className="text-white/50 text-sm">
+                                    Aquí puedes guardar una copia de seguridad de toda la información o restaurarla en otro dispositivo.
+                                </p>
                             </div>
-                        </Button>
-                    </div>
-                )}
-            </div>
 
-            {/* Backup Section */}
-            <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-                <h3 className="text-[--primary] font-bold text-lg mb-4 flex items-center gap-2">
-                    <span className="text-2xl">💾</span> Copia de Seguridad
-                </h3>
+                            {/* CLOUD & ADMIN SECTION */}
+                            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-6">
+                                <h3 className="text-blue-400 font-bold text-lg mb-4 flex items-center gap-2">
+                                    <span className="text-2xl">☁️</span> Nube & Admin
+                                </h3>
 
-                <div className="flex flex-col gap-4">
-                    <div>
-                        <h4 className="text-white font-bold mb-1">Exportar Datos</h4>
-                        <p className="text-white/50 text-xs mb-3">Descarga un archivo con todo tu historial.</p>
-                        <Button onClick={handleExport} className="w-full">
-                            📥 Descargar Backup
-                        </Button>
-                    </div>
+                                {isAdmin ? (
+                                    <div className="flex flex-col gap-4">
+                                        <div className="bg-green-500/20 text-green-400 p-2 rounded text-center font-bold text-sm border border-green-500/50">
+                                            ✅ MODO ADMIN ACTIVO
+                                        </div>
+                                        <p className="text-white/50 text-xs text-center">Sesión: {user?.email}</p>
 
-                    <div className="border-t border-white/10 pt-4">
-                        <h4 className="text-white font-bold mb-1">Importar Datos</h4>
-                        <p className="text-white/50 text-xs mb-3">Restaura un archivo de backup previamente descargado.</p>
-                        <input
-                            type="file"
-                            accept=".json"
-                            onChange={handleImport}
-                            className="block w-full text-sm text-gray-400
+                                        <div>
+                                            <h4 className="text-white font-bold mb-1">Sincronización Inicial</h4>
+                                            <Button onClick={async () => {
+                                                if (confirm("¿Subir todos los datos locales a la nube?")) {
+                                                    const { CloudService } = await import('../services/CloudService');
+                                                    await CloudService.uploadLocalData();
+                                                    alert("¡Datos subidos!");
+                                                }
+                                            }} className="w-full btn-primary bg-blue-600 hover:bg-blue-500">
+                                                🚀 Subir Datos Locales
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-3">
+                                        <p className="text-white/50 text-xs">Inicia sesión para gestionar la nube.</p>
+
+                                        <Button onClick={handleGoogleLogin} className="w-full bg-white text-black hover:bg-gray-200">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <span className="text-xl">🇬</span>
+                                                <span>Iniciar con Google</span>
+                                            </div>
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Backup Section */}
+                            <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+                                <h3 className="text-[--primary] font-bold text-lg mb-4 flex items-center gap-2">
+                                    <span className="text-2xl">💾</span> Copia de Seguridad
+                                </h3>
+
+                                <div className="flex flex-col gap-4">
+                                    <div>
+                                        <h4 className="text-white font-bold mb-1">Exportar Datos</h4>
+                                        <p className="text-white/50 text-xs mb-3">Descarga un archivo con todo tu historial.</p>
+                                        <Button onClick={handleExport} className="w-full">
+                                            📥 Descargar Backup
+                                        </Button>
+                                    </div>
+
+                                    <div className="border-t border-white/10 pt-4">
+                                        <h4 className="text-white font-bold mb-1">Importar Datos</h4>
+                                        <p className="text-white/50 text-xs mb-3">Restaura un archivo de backup previamente descargado.</p>
+                                        <input
+                                            type="file"
+                                            accept=".json"
+                                            onChange={handleImport}
+                                            className="block w-full text-sm text-gray-400
                                             file:mr-4 file:py-2 file:px-4
                                             file:rounded-full file:border-0
                                             file:text-sm file:font-semibold
                                             file:bg-[--primary] file:text-black
                                             hover:file:bg-[#bbe400]
                                             cursor-pointer"
-                        />
-                    </div>
-                </div>
-            </div>
+                                        />
+                                    </div>
+                                </div>
+                            </div>
 
-            {/* Danger Zone */}
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 mt-auto">
-                <h3 className="text-red-500 font-bold text-lg mb-4 flex items-center gap-2">
-                    <span className="text-2xl">⚠️</span> Zona de Peligro
-                </h3>
+                            {/* Danger Zone */}
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 mt-auto">
+                                <h3 className="text-red-500 font-bold text-lg mb-4 flex items-center gap-2">
+                                    <span className="text-2xl">⚠️</span> Zona de Peligro
+                                </h3>
 
-                <div>
-                    <h4 className="text-white font-bold mb-1">Resetear de Fábrica</h4>
-                    <p className="text-white/50 text-xs mb-3">
-                        Borra TODO (partidos, estadísticas, torneos) y deja la app como nueva.
-                        <br /><strong>No se puede deshacer.</strong>
-                    </p>
-                    <Button onClick={handleReset} variant="danger" className="w-full">
-                        🧨 Borrar Todo
-                    </Button>
-                </div>
-            </div>
-        </div>
-    )
-}
+                                <div>
+                                    <h4 className="text-white font-bold mb-1">Resetear de Fábrica</h4>
+                                    <p className="text-white/50 text-xs mb-3">
+                                        Borra TODO (partidos, estadísticas, torneos) y deja la app como nueva.
+                                        <br /><strong>No se puede deshacer.</strong>
+                                    </p>
+                                    <Button onClick={handleReset} variant="danger" className="w-full">
+                                        🧨 Borrar Todo
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
             </Card >
         </div >
     );
