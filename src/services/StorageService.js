@@ -163,10 +163,8 @@ export const StorageService = {
                 // We will handle Cloud deletion in the View or via a callback? 
                 // Alternatively, we can use the db instance here directly as we do for _pushToCloud.
                 try {
-                    const { deleteDoc, doc } = require("firebase/firestore");
-                    // Wait, we are using ES modules import at top.
-                    // We can just use deleteDoc directly.
-                    deleteDoc(doc(db, 'matches', matchId.toString()));
+                    // Use top-level imports
+                    await deleteDoc(doc(db, 'matches', matchId.toString()));
                     console.log(`Cloud: Deleted match ${matchId}`);
                 } catch (e) {
                     console.error("Error deleting from cloud", e);
