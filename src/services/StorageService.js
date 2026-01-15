@@ -35,10 +35,12 @@ export const StorageService = {
         return JSON.parse(stored);
     },
 
-    updatePlayers: (players) => {
+    updatePlayers: (players, skipCloud = false) => {
         localStorage.setItem(PLAYERS_KEY, JSON.stringify(players));
         // Cloud Sync
-        players.forEach(p => StorageService._pushToCloud('players', p));
+        if (!skipCloud) {
+            players.forEach(p => StorageService._pushToCloud('players', p));
+        }
     },
 
     resetStats: () => {

@@ -86,7 +86,7 @@ export const CloudService = {
                 const players = [];
                 snapshot.forEach(doc => players.push(doc.data()));
                 if (players.length > 0) {
-                    StorageService.updatePlayers(players);
+                    StorageService.updatePlayers(players, true);
                     if (onDataUpdated) onDataUpdated('players');
                 }
             });
