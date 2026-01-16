@@ -95,7 +95,16 @@ export const CloudService = {
             onSnapshot(query(collection(db, COLLECTIONS.MATCHES), orderBy('date', 'desc')), (snapshot) => {
                 const matches = [];
                 snapshot.forEach(doc => matches.push(doc.data()));
-                StorageService._overwriteMatches(matches); // We need this method in StorageService
+
+                // SAFETY GUARD: If Cloud is empty but Local has data, DO NOT OVERWRITE.
+                // This prevents wiping local stats on first sync if Cloud is empty.
+                const localMatches = StorageService.getMatches();
+                if (matches.length === 0 && localMatches.length > 0) {
+                    console.warn("Cloud Sync: Cloud is empty, but Local has data. Keeping local data.");
+                    return;
+                }
+
+                StorageService._overwriteMatches(matches);
                 if (onDataUpdated) onDataUpdated('matchesAndStats');
             });
 
@@ -103,7 +112,15 @@ export const CloudService = {
             onSnapshot(collection(db, COLLECTIONS.TOURNAMENTS), (snapshot) => {
                 const tournaments = [];
                 snapshot.forEach(doc => tournaments.push(doc.data()));
-                StorageService._overwriteTournaments(tournaments); // We need this method in StorageService
+
+                // SAFETY GUARD
+                const localTournaments = StorageService.getTournaments();
+                if (tournaments.length === 0 && localTournaments.length > 0) {
+                    console.warn("Cloud Sync: Cloud Tournaments empty, keeping local.");
+                    return;
+                }
+
+                StorageService._overwriteTournaments(tournaments);
                 if (onDataUpdated) onDataUpdated('tournaments');
             });
 
