@@ -229,23 +229,16 @@ export const DuelView = ({ onBack, isAdmin }) => {
                                     score2={match.scoreAway}
                                     onScoreChange={(field, val) => updateMatchScore(index, field, val)}
                                     label="VS"
-                                    readOnly={!isAdmin || match.isFinished} // Pass readOnly if finished
+                                    readOnly={!isAdmin || match.isFinished}
                                     isFinished={match.isFinished}
+                                    onFinish={isAdmin ? () => confirmMatch(index) : null}
                                 />
-                                {isAdmin && !match.isFinished && (
-                                    <button
-                                        onClick={() => confirmMatch(index)}
-                                        className="h-10 w-10 bg-green-500 rounded-full flex items-center justify-center font-bold text-black hover:scale-110 transition-transform shadow-[0_0_15px_rgba(34,197,94,0.5)]"
-                                        title="Confirmar y Guardar"
-                                    >
-                                        ✓
-                                    </button>
-                                )}
                                 {match.isFinished && (
-                                    <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center font-bold text-[#ccff00] border border-[#ccff00]/50">
+                                    <div className="h-4 w-4 bg-white/10 rounded-full flex items-center justify-center font-bold text-[#ccff00] border border-[#ccff00]/50 absolute -right-6">
                                         ✓
                                     </div>
                                 )}
+
                             </div>
                         </div>
                     ))}

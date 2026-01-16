@@ -95,7 +95,21 @@ const MatchVersus = ({
                     {!isFinished && onFinish && !readOnly && (
                         <button
                             onClick={onFinish}
-                            style={{ marginTop: '8px', fontSize: '11px', color: '#ccff00', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', background: 'none', border: 'none', cursor: 'pointer' }}
+                            className="confirm-btn animate-pulse-subtle"
+                            style={{
+                                marginTop: '12px',
+                                fontSize: '10px',
+                                color: 'black',
+                                backgroundColor: '#ccff00',
+                                fontWeight: '900',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.1em',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '6px 12px',
+                                borderRadius: '999px',
+                                boxShadow: '0 0 10px rgba(204, 255, 0, 0.4)'
+                            }}
                         >
                             CONFIRMAR
                         </button>
