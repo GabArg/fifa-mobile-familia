@@ -267,7 +267,7 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                 {/* GENERAL TAB */}
                 {tab === 'GENERAL' && (
                     <div className="flex flex-col h-full">
-                        <div className="flex justify-between items-end mb-6 flex-shrink-0 min-h-[40px]">
+                        <div className="flex justify-between items-end mb-6 flex-shrink-0 min-h-[60px]">
                             <h2 className="view-title leading-none">Tabla General</h2>
                         </div>
                         <div className="flex-1 overflow-y-auto">
@@ -279,7 +279,7 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                 {/* TOURNAMENT TAB */}
                 {tab === 'TOURNEY' && (
                     <div className="flex flex-col h-full">
-                        <div className="flex justify-between items-end mb-6 flex-shrink-0 min-h-[40px]">
+                        <div className="flex justify-between items-end mb-6 flex-shrink-0 min-h-[60px]">
                             <h2 className="view-title leading-none">Torneos</h2>
                             <div className="flex flex-col items-end">
                                 <span className="text-[10px] text-white/30 font-mono mb-1">{APP_VERSION}</span>
@@ -304,7 +304,7 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                 {/* HISTORY (H2H) TAB */}
                 {tab === 'H2H' && (
                     <div className="flex flex-col h-full">
-                        <div className="flex justify-between items-end mb-6 flex-shrink-0 min-h-[40px]">
+                        <div className="flex justify-between items-end mb-6 flex-shrink-0 min-h-[60px]">
                             <h2 className="view-title leading-none">Historial VS</h2>
 
                             {/* NEW: Filter Control */}
@@ -473,7 +473,7 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                 {/* MATCHES LOG TAB */}
                 {tab === 'MATCHES' && (
                     <div className="flex flex-col h-full">
-                        <div className="flex justify-between items-end mb-6 flex-shrink-0 min-h-[40px]">
+                        <div className="flex justify-between items-end mb-6 flex-shrink-0 min-h-[60px]">
                             <h2 className="view-title leading-none">Partidos</h2>
                             <div className="flex flex-col items-end gap-1">
                                 <span className="text-xs text-white/50 uppercase tracking-widest font-bold">{matches.length} Registros</span>
@@ -657,7 +657,7 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                 {
                     tab === 'DATA' && (
                         <div className="flex flex-col h-full">
-                            <div className="flex justify-between items-end mb-6 flex-shrink-0 min-h-[40px]">
+                            <div className="flex justify-between items-end mb-6 flex-shrink-0 min-h-[60px]">
                                 <div>
                                     <h2 className="view-title leading-none">Gestión de Datos</h2>
                                     <p className="text-white/50 text-xs mt-1">
