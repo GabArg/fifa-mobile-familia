@@ -221,10 +221,6 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
     return (
         <div className="stats-view animate-fade-in">
             <div className="view-header-row mb-6">
-                <Button variant="secondary" className="btn-small" onClick={onBack}>
-                    <span className="flex items-center gap-1"><span className="text-xl">«</span> Volver</span>
-                </Button>
-
                 <div className="stats-tabs flex-1 mx-4 overflow-x-auto">
                     <button
                         className={`stats-tab-item ${tab === 'GENERAL' ? 'active' : ''}`}
@@ -257,6 +253,14 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                         Datos
                     </button>
                 </div>
+
+                <button
+                    onClick={onBack}
+                    className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-all hover:scale-110 border border-white/10"
+                    title="Cerrar Estadísticas"
+                >
+                    <span className="text-xl font-bold">✕</span>
+                </button>
             </div>
 
             <Card className="flex-1 w-full overflow-hidden flex flex-col p-4">
@@ -273,10 +277,8 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                     <>
                         <div className="flex justify-between items-center mb-6">
                             <div>
-                                <Button onClick={onBack} className="bg-transparent border border-white/20 text-white hover:bg-white/10 text-sm">
-                                    « Volver
-                                </Button>
-                                <span className="text-[10px] text-white/30 ml-2 font-mono">{APP_VERSION}</span>
+                                <h3 className="text-white/50 text-xs font-bold uppercase tracking-widest mb-1">Filtrar por Formato</h3>
+                                <span className="text-[10px] text-white/30 font-mono">{APP_VERSION}</span>
                             </div>
                             <select
                                 className="bg-black text-white border border-white/20 p-2 rounded"
