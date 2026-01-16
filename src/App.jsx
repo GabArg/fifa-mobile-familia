@@ -4,6 +4,7 @@ import { DuelView } from './views/DuelView'
 import { Tournament3View } from './views/Tournament3View'
 import { Tournament4View } from './views/Tournament4View'
 import { StatsView } from './views/StatsView'
+import { DataView } from './views/DataView'
 import { NeonBall } from './components/NeonBall'
 import { useAudio } from './hooks/useAudio'
 
@@ -95,6 +96,8 @@ function App() {
         return <Tournament4View {...commonProps} />;
       case 'STATS':
         return <StatsView {...commonProps} />;
+      case 'DATA':
+        return <DataView {...commonProps} />;
       default:
         return <HomeView {...commonProps} />;
     }
@@ -189,8 +192,11 @@ function App() {
 
             <div className="nav-spacer"></div>
 
-            <button className="store-button">
-              <span className="store-text">TIENDA</span>
+            <button
+              onClick={() => setCurrentView('DATA')}
+              className={`store-button ${currentView === 'DATA' ? 'brightness-125' : ''}`}
+            >
+              <span className="store-text">ADMIN</span>
             </button>
           </nav>
         )}
