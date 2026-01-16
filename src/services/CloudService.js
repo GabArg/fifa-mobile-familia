@@ -93,34 +93,51 @@ export const CloudService = {
 
             // Listen to Matches
             onSnapshot(query(collection(db, COLLECTIONS.MATCHES), orderBy('date', 'desc')), (snapshot) => {
-                const matches = [];
-                snapshot.forEach(doc => matches.push(doc.data()));
+                const cloudMatches = [];
+                snapshot.forEach(doc => cloudMatches.push(doc.data()));
 
-                // SAFETY GUARD: If Cloud is empty but Local has data, DO NOT OVERWRITE.
-                // This prevents wiping local stats on first sync if Cloud is empty.
+                // SMART MERGE: Cloud is authority for updates, but Local might have unsynced new matches.
+                // Strategy: Start with Cloud matches. Add any Local match that is NOT in Cloud.
+                // Risk: Deleted matches might reappear if deletion didn't reach cloud. 
+                // Benefit: New matches are never lost due to sync overwrites.
                 const localMatches = StorageService.getMatches();
-                if (matches.length === 0 && localMatches.length > 0) {
-                    console.warn("Cloud Sync: Cloud is empty, but Local has data. Keeping local data.");
-                    return;
-                }
+                const mergedMatches = [...cloudMatches];
 
-                StorageService._overwriteMatches(matches);
+                localMatches.forEach(lm => {
+                    if (!cloudMatches.find(cm => cm.id === lm.id)) {
+                        // Logic to check if this is a "zombie" (deleted in cloud) or "new" (pending upload)?
+                        // Without tombstones, we err on side of caution: KEEP IT.
+                        // Ideally, we could auto-upload it here?
+                        mergedMatches.push(lm);
+                    }
+                });
+
+                // Sort by date desc
+                mergedMatches.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                StorageService._overwriteMatches(mergedMatches);
                 if (onDataUpdated) onDataUpdated('matchesAndStats');
             });
 
             // Listen to Tournaments
             onSnapshot(collection(db, COLLECTIONS.TOURNAMENTS), (snapshot) => {
-                const tournaments = [];
-                snapshot.forEach(doc => tournaments.push(doc.data()));
+                const cloudTournaments = [];
+                snapshot.forEach(doc => cloudTournaments.push(doc.data()));
 
-                // SAFETY GUARD
+                // SMART MERGE FOR TOURNAMENTS
                 const localTournaments = StorageService.getTournaments();
-                if (tournaments.length === 0 && localTournaments.length > 0) {
-                    console.warn("Cloud Sync: Cloud Tournaments empty, keeping local.");
-                    return;
-                }
+                const mergedTournaments = [...cloudTournaments];
 
-                StorageService._overwriteTournaments(tournaments);
+                localTournaments.forEach(lt => {
+                    if (!cloudTournaments.find(ct => ct.id === lt.id)) {
+                        mergedTournaments.push(lt);
+                    }
+                });
+
+                // Sort? Tournaments usually don't have date field in root, but let's trust order or add sort if needed.
+                // Assuming newer IDs/creation? 
+
+                StorageService._overwriteTournaments(mergedTournaments);
                 if (onDataUpdated) onDataUpdated('tournaments');
             });
 
