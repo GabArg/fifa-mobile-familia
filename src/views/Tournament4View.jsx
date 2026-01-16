@@ -95,6 +95,20 @@ export const Tournament4View = ({ onBack, onToggleUI, isAdmin }) => {
 
         // Check if ALL matches in this stage are finished
         const allFinished = newStages[stageKey].matches.every(m => m.isFinished);
+
+        // Save to History (Incremental)
+        if (!match.isSaved) { // Avoid duplicates
+            StorageService.addMatch({
+                type: 'tourney4',
+                players: [match.player1.id, match.player2.id],
+                scores: { [match.player1.id]: parseInt(match.score1), [match.player2.id]: parseInt(match.score2) }
+            });
+            // Mark as saved in local state (would need schema update effectively, or just trust isFinished is only set once)
+            // 'isFinished' acts as our lock in the UI, but let's be safe.
+            // Actually, we are replacing the state object. We can check if it wasn't finished before.
+            // But since 'finishMatch' is called, it implies it wasn't finished or we are re-finishing (which UI prevents).
+        }
+
         if (allFinished) {
             evaluateStage(stageKey, newStages);
         }

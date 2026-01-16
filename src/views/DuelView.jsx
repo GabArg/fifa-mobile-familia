@@ -37,8 +37,8 @@ export const DuelView = ({ onBack, isAdmin }) => {
         if (selectedPlayers.length === 2) {
             // Initialize with 2 legs
             setMatches([
-                { id: 1, home: selectedPlayers[0], away: selectedPlayers[1], scoreHome: '', scoreAway: '' },
-                { id: 2, home: selectedPlayers[1], away: selectedPlayers[0], scoreHome: '', scoreAway: '' }
+                { id: 1, home: selectedPlayers[0], away: selectedPlayers[1], scoreHome: '', scoreAway: '', isFinished: false },
+                { id: 2, home: selectedPlayers[1], away: selectedPlayers[0], scoreHome: '', scoreAway: '', isFinished: false }
             ]);
             setStep('PLAY');
         }
@@ -46,8 +46,10 @@ export const DuelView = ({ onBack, isAdmin }) => {
 
     const updateMatchScore = (index, field, value) => {
         if (value < 0) return;
-        const newMatches = [...matches];
+        // Block update if match is already finished/saved
+        if (matches[index].isFinished) return;
 
+        const newMatches = [...matches];
         // Map MatchVersus 'score1'/'score2' to 'scoreHome'/'scoreAway'
         if (field === 'score1') newMatches[index].scoreHome = value;
         if (field === 'score2') newMatches[index].scoreAway = value;
@@ -55,19 +57,38 @@ export const DuelView = ({ onBack, isAdmin }) => {
         setMatches(newMatches);
     };
 
-    const finishDuel = () => {
-        // Validation: All scores must be filled
-        const incomplete = matches.some(m => m.scoreHome === '' || m.scoreAway === '');
-        if (incomplete) return;
+    const confirmMatch = (index) => {
+        const m = matches[index];
+        if (m.scoreHome === '' || m.scoreAway === '') {
+            alert("Completa ambos marcadores primero.");
+            return;
+        }
 
-        // Save matches to history
-        // Save matches to history (Batch)
-        const matchesToSave = matches.map(m => ({
-            type: 'duel',
-            players: [m.home.id, m.away.id],
-            scores: { [m.home.id]: parseInt(m.scoreHome), [m.away.id]: parseInt(m.scoreAway) }
-        }));
-        StorageService.addMatches(matchesToSave);
+        if (confirm("¿Confirmar resultado y guardar en historial? No podrás editarlo después.")) {
+            // Save ONE match
+            StorageService.addMatch({
+                type: 'duel',
+                players: [m.home.id, m.away.id],
+                scores: { [m.home.id]: parseInt(m.scoreHome), [m.away.id]: parseInt(m.scoreAway) }
+            });
+
+            // Mark as finished locally
+            const newMatches = [...matches];
+            newMatches[index].isFinished = true;
+            setMatches(newMatches);
+        }
+    };
+
+    const finishDuel = () => {
+        // Validation: All matches must be finished/saved
+        const incomplete = matches.some(m => !m.isFinished);
+        if (incomplete) {
+            alert("Debes CONFIRMAR todos los partidos individualmente antes de finalizar el duelo.");
+            return;
+        }
+
+        // NO BATCH SAVING HERE ANYMORE
+        // Logic solely for determining winner and showing results
 
         const p1 = selectedPlayers[0];
         const p2 = selectedPlayers[1];
@@ -96,9 +117,11 @@ export const DuelView = ({ onBack, isAdmin }) => {
             const nextHome = lastMatch.away;
             const nextAway = lastMatch.home;
 
+            alert("¡EMPATE GLOBAL! Se añade partido de desempate.");
+
             setMatches([
                 ...matches,
-                { id: nextId, home: nextHome, away: nextAway, scoreHome: '', scoreAway: '', isTieBreaker: true }
+                { id: nextId, home: nextHome, away: nextAway, scoreHome: '', scoreAway: '', isFinished: false, isTieBreaker: true }
             ]);
             // Stay in PLAY step
             return;
@@ -198,15 +221,32 @@ export const DuelView = ({ onBack, isAdmin }) => {
                                     {match.isTieBreaker ? 'Partido de Desempate' : index === 0 ? 'Partido de Ida' : 'Partido de Vuelta'}
                                 </span>
                             </div>
-                            <MatchVersus
-                                player1={match.home}
-                                player2={match.away}
-                                score1={match.scoreHome}
-                                score2={match.scoreAway}
-                                onScoreChange={(field, val) => updateMatchScore(index, field, val)}
-                                label="VS"
-                                readOnly={!isAdmin} // Pass readOnly
-                            />
+                            <div className="flex gap-2 items-center">
+                                <MatchVersus
+                                    player1={match.home}
+                                    player2={match.away}
+                                    score1={match.scoreHome}
+                                    score2={match.scoreAway}
+                                    onScoreChange={(field, val) => updateMatchScore(index, field, val)}
+                                    label="VS"
+                                    readOnly={!isAdmin || match.isFinished} // Pass readOnly if finished
+                                    isFinished={match.isFinished}
+                                />
+                                {isAdmin && !match.isFinished && (
+                                    <button
+                                        onClick={() => confirmMatch(index)}
+                                        className="h-10 w-10 bg-green-500 rounded-full flex items-center justify-center font-bold text-black hover:scale-110 transition-transform shadow-[0_0_15px_rgba(34,197,94,0.5)]"
+                                        title="Confirmar y Guardar"
+                                    >
+                                        ✓
+                                    </button>
+                                )}
+                                {match.isFinished && (
+                                    <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center font-bold text-[#ccff00] border border-[#ccff00]/50">
+                                        ✓
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -233,18 +273,19 @@ export const DuelView = ({ onBack, isAdmin }) => {
                             onClick={finishDuel}
                             style={{
                                 padding: '0.75rem 2rem',
-                                backgroundColor: '#ccff00',
-                                color: 'black',
+                                backgroundColor: matches.every(m => m.isFinished) ? '#ccff00' : 'rgba(255,255,255,0.1)',
+                                color: matches.every(m => m.isFinished) ? 'black' : 'rgba(255,255,255,0.3)',
                                 fontWeight: '900',
                                 borderRadius: '999px',
                                 border: 'none',
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.05em',
-                                cursor: 'pointer',
-                                boxShadow: '0 0 20px rgba(204,255,0,0.3)'
+                                cursor: matches.every(m => m.isFinished) ? 'pointer' : 'not-allowed',
+                                boxShadow: matches.every(m => m.isFinished) ? '0 0 20px rgba(204,255,0,0.3)' : 'none'
                             }}
+                            disabled={!matches.every(m => m.isFinished)}
                         >
-                            {matches.length > 2 && matches.every(m => m.scoreHome && m.scoreAway) ? 'Verificar Resultado' : 'Finalizar Duelo'}
+                            Finalizar Duelo
                         </button>
                     )}
                 </div>
