@@ -11,7 +11,7 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
     // ... (rest of state)
 
     // State for debugging/versioning
-    const APP_VERSION = "v2.3 (Grid Fix)";
+    const APP_VERSION = "v2.5 (Timeout Test)";
 
     // Data State
     const [stats, setStats] = useState([]);
@@ -86,7 +86,7 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                     // Race between Delete and Timeout
                     const deletePromise = CloudService.deleteAllData();
                     const timeoutPromise = new Promise((_, reject) =>
-                        setTimeout(() => reject(new Error("Tiempo de espera agotado. Verifica tu conexión o permisos.")), 15000)
+                        setTimeout(() => reject(new Error("Tiempo de espera agotado. Verifica tu conexión o permisos.")), 5000)
                     );
 
                     await Promise.race([deletePromise, timeoutPromise]);
@@ -651,6 +651,7 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                                 <h2 className="view-title mb-2">Gestión de Datos</h2>
                                 <p className="text-white/50 text-sm">
                                     Aquí puedes guardar una copia de seguridad de toda la información o restaurarla en otro dispositivo.
+                                    <br /><span className="text-[10px] bg-white/10 px-1 rounded text-white/30 font-mono">{APP_VERSION}</span>
                                 </p>
                             </div>
 
