@@ -392,10 +392,10 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                                         backgroundColor: '#0f0f13'
                                     }} className="flex-shrink-0">
                                         <div style={{ width: '50px', textAlign: 'center' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Fecha</div>
-                                        <div style={{ flex: 1, textAlign: 'right' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Local</div>
-                                        <div style={{ width: '88px', textAlign: 'center' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Res</div>
-                                        <div style={{ flex: 1, textAlign: 'left' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Visita</div>
-                                        {isAdmin && <div style={{ width: '80px', textAlign: 'center' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Acciones</div>}
+                                        <div style={{ flex: 1 }}></div>
+                                        <div style={{ width: '88px' }}></div>
+                                        <div style={{ flex: 1 }}></div>
+                                        {isAdmin && <div style={{ width: '80px' }}></div>}
                                         <div style={{ width: '80px', textAlign: 'center' }} className="text-white/30 text-[10px] uppercase font-bold tracking-wider">Torneo</div>
                                     </div>
 
@@ -565,7 +565,9 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                                             <div style={{ width: '30px', flexShrink: 0, textAlign: 'center', fontWeight: '900', fontSize: '18px' }} className={p2Won ? 'text-[#ccff00]' : 'text-white'}>{s2}</div>
                                         )}
 
-                                        <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }} className={`truncate ${p2Won ? 'text-white' : 'text-gray-500'}`}>{p2.name}</span>
+                                        <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                                            <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }} className={`truncate ${p2Won ? 'text-white' : 'text-gray-500'}`}>{p2.name}</span>
+                                        </div>
 
                                         {/* 7. ACTIONS (Admin Only) */}
                                         {isAdmin ? (
