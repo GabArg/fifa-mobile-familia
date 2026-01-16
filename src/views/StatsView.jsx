@@ -52,6 +52,8 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
         } else if (tab === 'GENERAL') {
             setIsPodiumMode(false);
             loadStats({});
+        } else if (tab === 'MATCHES') {
+            setMatches(StorageService.getMatches().sort((a, b) => new Date(b.date) - new Date(a.date)));
         }
     }, [tab, tourneyFilter]);
 

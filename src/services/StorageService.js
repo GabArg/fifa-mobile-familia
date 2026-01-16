@@ -22,6 +22,7 @@ export const StorageService = {
             console.log(`Cloud Push: ${collection}/${data.id}`);
         } catch (e) {
             console.warn("Cloud push failed:", e);
+            alert(`⚠️ ERROR GUARDANDO EN LA NUBE (${collection}):\n\n${e.message}\n\nLos datos se guardaron LOCALMENTE, pero podrían perderse si borras caché o cambias de dispositivo.`);
         }
     },
 
@@ -109,6 +110,7 @@ export const StorageService = {
                 batch.commit().then(() => console.log(`Cloud: Batched ${matchesToAdd.length} matches`));
             } catch (e) {
                 console.error("Cloud batch push failed", e);
+                alert(`⚠️ ERROR SUBIENDO PARTIDOS A LA NUBE:\n\n${e.message}`);
             }
         }
 
@@ -170,6 +172,7 @@ export const StorageService = {
                     console.log(`Cloud: Deleted match ${matchId}`);
                 } catch (e) {
                     console.error("Error deleting from cloud", e);
+                    alert(`⚠️ ERROR BORRANDO DE LA NUBE:\n\n${e.message}\n\nEl partido volverá a aparecer si recargas la página porque la Nube rechazó el borrado.`);
                 }
             }
             return true;
