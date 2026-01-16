@@ -83,7 +83,13 @@ export const StatsView = ({ onBack, isAdmin, handleGoogleLogin, handleLogout, us
                     // Show loading state or at least prevent navigation
                     document.body.style.cursor = 'wait';
 
-                    await CloudService.deleteAllData();
+                    // Race between Delete and Timeout
+                    const deletePromise = CloudService.deleteAllData();
+                    const timeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error("Tiempo de espera agotado. Verifica tu conexión o permisos.")), 15000)
+                    );
+
+                    await Promise.race([deletePromise, timeoutPromise]);
 
                     alert('✅ BASE DE DATOS BORRADA EN LA NUBE.\n\nLa aplicación se recargará ahora como nueva.');
 
