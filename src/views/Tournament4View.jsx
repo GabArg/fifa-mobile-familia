@@ -20,6 +20,33 @@ export const Tournament4View = ({ onBack, onToggleUI, isAdmin }) => {
     const [champion, setChampion] = useState(null);
 
     useEffect(() => {
+        // Crash Recovery
+        const temp = localStorage.getItem('FIFA_TEMP_TOURNEY4');
+        if (temp) {
+            try {
+                const data = JSON.parse(temp);
+                setStages(data.stages);
+                setStep(data.step);
+                if (data.champion) setChampion(data.champion);
+            } catch (e) {
+                console.error("Error recovering tournament 4", e);
+                localStorage.removeItem('FIFA_TEMP_TOURNEY4');
+            }
+        }
+    }, []);
+
+    // Save State
+    useEffect(() => {
+        if (step === 'PLAY' || step === 'FINISHED') {
+            localStorage.setItem('FIFA_TEMP_TOURNEY4', JSON.stringify({
+                stages,
+                step,
+                champion
+            }));
+        }
+    }, [stages, step, champion]);
+
+    useEffect(() => {
         if (!isAdmin) {
             setStep('LOCKED');
             return;
@@ -96,22 +123,40 @@ export const Tournament4View = ({ onBack, onToggleUI, isAdmin }) => {
         // Check if ALL matches in this stage are finished
         const allFinished = newStages[stageKey].matches.every(m => m.isFinished);
 
-        // Save to History (Incremental)
-        if (!match.isSaved) { // Avoid duplicates
-            StorageService.addMatch({
-                type: 'tourney4',
-                players: [match.player1.id, match.player2.id],
-                scores: { [match.player1.id]: parseInt(match.score1), [match.player2.id]: parseInt(match.score2) }
+        // Save to History (Incremental or Update)
+        const matchToSave = {
+            type: 'tourney4',
+            players: [match.player1.id, match.player2.id],
+            scores: { [match.player1.id]: parseInt(match.score1), [match.player2.id]: parseInt(match.score2) }
+        };
+
+        if (match.dbId) {
+            // UPDATE existing
+            StorageService.updateMatch({
+                ...matchToSave,
+                id: match.dbId,
+                date: match.date // Keep original date
             });
-            // Mark as saved in local state (would need schema update effectively, or just trust isFinished is only set once)
-            // 'isFinished' acts as our lock in the UI, but let's be safe.
-            // Actually, we are replacing the state object. We can check if it wasn't finished before.
-            // But since 'finishMatch' is called, it implies it wasn't finished or we are re-finishing (which UI prevents).
+        } else {
+            // CREATE new
+            const saved = StorageService.addMatch(matchToSave);
+            // Update state with ID
+            newStages[stageKey].matches[matchIndex].dbId = saved.id;
+            newStages[stageKey].matches[matchIndex].date = saved.date;
+            setStages(newStages);
         }
 
         if (allFinished) {
             evaluateStage(stageKey, newStages);
         }
+    };
+
+    const editMatch = (stageKey, matchIndex) => {
+        setStages(prev => {
+            const newStages = { ...prev };
+            newStages[stageKey].matches[matchIndex].isFinished = false;
+            return newStages;
+        });
     };
 
     const evaluateStage = (stageKey, currentStages) => {
@@ -197,6 +242,10 @@ export const Tournament4View = ({ onBack, onToggleUI, isAdmin }) => {
                 standings: standings
             });
 
+            // Allow confetti/animation before clearing?
+            // User might want to see the Bracket final state.
+            // We clear on "Back".
+
             if (onToggleUI) onToggleUI(false);
         } else if (stageKey === 'thirdPlace') {
             // Just mark winner, maybe show a mini modal or toast?
@@ -240,8 +289,16 @@ export const Tournament4View = ({ onBack, onToggleUI, isAdmin }) => {
     };
 
     const handleBack = () => {
-        if (onToggleUI) onToggleUI(true);
-        onBack();
+        if (step === 'PLAY' || step === 'FINISHED' || champion) {
+            if (window.confirm("¿Salir del torneo? Si está en curso se perderán los datos no guardados.")) {
+                localStorage.removeItem('FIFA_TEMP_TOURNEY4');
+                if (onToggleUI) onToggleUI(true);
+                onBack();
+            }
+        } else {
+            if (onToggleUI) onToggleUI(true);
+            onBack();
+        }
     };
 
     if (step === 'LOCKED') {
@@ -284,6 +341,7 @@ export const Tournament4View = ({ onBack, onToggleUI, isAdmin }) => {
                 stages={stages}
                 onUpdateScore={updateScore}
                 onFinishMatch={finishMatch}
+                onEditMatch={editMatch}
                 readOnly={!isAdmin} // Pass readOnly
             />
 

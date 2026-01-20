@@ -8,6 +8,7 @@ const MatchVersus = ({
     score2,
     onScoreChange,
     onFinish,
+    onEdit, // New prop
     isFinished,
     label = "VS",
     readOnly = false // New prop
@@ -112,6 +113,28 @@ const MatchVersus = ({
                             }}
                         >
                             CONFIRMAR
+                        </button>
+                    )}
+
+                    {isFinished && !readOnly && (
+                        <button
+                            onClick={onEdit}
+                            style={{
+                                marginTop: '8px',
+                                fontSize: '10px',
+                                color: 'rgba(255,255,255,0.5)',
+                                backgroundColor: 'transparent',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                fontWeight: 'bold',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.1em',
+                                cursor: 'pointer',
+                                padding: '4px 10px',
+                                borderRadius: '999px',
+                            }}
+                            className="hover:bg-white/10 hover:text-white transition-colors"
+                        >
+                            EDITAR
                         </button>
                     )}
                 </div>

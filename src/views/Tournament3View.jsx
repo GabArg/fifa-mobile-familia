@@ -13,8 +13,43 @@ export const Tournament3View = ({ onBack, onToggleUI, isAdmin }) => {
     const [winner, setWinner] = useState(null);
 
     useEffect(() => {
-        setPlayers(StorageService.getPlayers());
+        // Crash Recovery: Check for temp data
+        const temp = localStorage.getItem('FIFA_TEMP_TOURNEY3');
+        if (temp) {
+            try {
+                const data = JSON.parse(temp);
+                setPlayers(data.players);
+                setSelectedPlayers(data.selectedPlayers);
+                setMatches(data.matches);
+                // Re-calculate or restore standings? Better to recalc or store too.
+                // Restoring standings is safer if we want exact state
+                if (data.standings) setStandings(data.standings);
+                if (data.step) setStep(data.step);
+            } catch (e) {
+                console.error("Error recovering tournament", e);
+                localStorage.removeItem('FIFA_TEMP_TOURNEY3');
+                setPlayers(StorageService.getPlayers());
+            }
+        } else {
+            setPlayers(StorageService.getPlayers());
+        }
     }, []);
+
+    // Save state on change
+    useEffect(() => {
+        if (step === 'PLAY' && matches.length > 0) {
+            localStorage.setItem('FIFA_TEMP_TOURNEY3', JSON.stringify({
+                players,
+                selectedPlayers,
+                matches,
+                standings,
+                step
+            }));
+        } else if (step === 'RESULT' || step === 'SELECT') {
+            // Maybe don't clear immediately on RESULT to allow refresh?
+            // Only clear on Back/Exit
+        }
+    }, [players, selectedPlayers, matches, standings, step]);
 
     const togglePlayer = (p) => {
         if (!isAdmin) return; // Block selection
@@ -72,22 +107,47 @@ export const Tournament3View = ({ onBack, onToggleUI, isAdmin }) => {
         newMatches[index].isFinished = true;
         setMatches(newMatches);
 
-        // Update Standings immediately? Or assume calculation
+        // Update Standings
         calculateStandings(newMatches);
 
-        // Save to storage
-        StorageService.addMatch({
-            type: 'tournament3',
-            players: [m.home.id, m.away.id],
-            scores: { [m.home.id]: parseInt(m.scoreHome), [m.away.id]: parseInt(m.scoreAway) }
-        });
+        // Save to storage (or Update if editing)
+        if (m.dbId) {
+            StorageService.updateMatch({
+                id: m.dbId,
+                type: 'tournament3', // Keep original type
+                date: m.date, // Keep original date
+                players: [m.home.id, m.away.id],
+                scores: { [m.home.id]: parseInt(m.scoreHome), [m.away.id]: parseInt(m.scoreAway) }
+            });
+        } else {
+            const savedMatch = StorageService.addMatch({
+                type: 'tournament3',
+                players: [m.home.id, m.away.id],
+                scores: { [m.home.id]: parseInt(m.scoreHome), [m.away.id]: parseInt(m.scoreAway) }
+            });
+            // Update match with DB ID to allow future edits
+            newMatches[index].dbId = savedMatch.id;
+            newMatches[index].date = savedMatch.date;
+            setMatches(newMatches);
+        }
+    };
+
+    const editMatch = (index) => {
+        // Unlock match
+        const newMatches = [...matches];
+        newMatches[index].isFinished = false;
+        setMatches(newMatches);
+        // Important: We don't delete from DB yet, we just unlock UI. 
+        // When 'finishMatch' is called again, it will UPDATE the existing ID.
     };
 
     const calculateStandings = (currentMatches) => {
         // Initialize map
         const stats = {};
         selectedPlayers.forEach(p => {
-            stats[p.id] = { player: p, points: 0, gf: 0, gc: 0, played: 0 };
+            selectedPlayers.forEach(p => {
+                stats[p.id] = { player: p, points: 0, gf: 0, gc: 0, played: 0, won: 0, drawn: 0, lost: 0 };
+            });
         });
 
         currentMatches.forEach(m => {
@@ -102,11 +162,21 @@ export const Tournament3View = ({ onBack, onToggleUI, isAdmin }) => {
                 stats[m.away.id].gf += sA;
                 stats[m.away.id].gc += sH;
 
-                if (sH > sA) stats[m.home.id].points += 3;
-                else if (sA > sH) stats[m.away.id].points += 3;
+                if (sH > sA) {
+                    stats[m.home.id].points += 3;
+                    stats[m.home.id].won++;
+                    stats[m.away.id].lost++;
+                }
+                else if (sA > sH) {
+                    stats[m.away.id].points += 3;
+                    stats[m.away.id].won++;
+                    stats[m.home.id].lost++;
+                }
                 else {
                     stats[m.home.id].points += 1;
+                    stats[m.home.id].drawn++;
                     stats[m.away.id].points += 1;
+                    stats[m.away.id].drawn++;
                 }
             }
         });
@@ -137,6 +207,9 @@ export const Tournament3View = ({ onBack, onToggleUI, isAdmin }) => {
                 }))
             });
 
+            // Clear Temp Data
+            localStorage.removeItem('FIFA_TEMP_TOURNEY3');
+
             // Delay for effect, then switch to RESULT view
             setTimeout(() => {
                 setStep('RESULT');
@@ -146,8 +219,16 @@ export const Tournament3View = ({ onBack, onToggleUI, isAdmin }) => {
     };
 
     const handleBack = () => {
-        if (onToggleUI) onToggleUI(true);
-        onBack();
+        if (step === 'PLAY' || step === 'RESULT') {
+            if (window.confirm("¿Seguro que quieres salir? Se perderá el progreso del torneo actual si no lo has finalizado.")) {
+                localStorage.removeItem('FIFA_TEMP_TOURNEY3');
+                if (onToggleUI) onToggleUI(true);
+                onBack();
+            }
+        } else {
+            if (onToggleUI) onToggleUI(true);
+            onBack();
+        }
     };
 
     if (step === 'RESULT') {
@@ -266,6 +347,7 @@ export const Tournament3View = ({ onBack, onToggleUI, isAdmin }) => {
                                 isFinished={match.isFinished}
                                 onScoreChange={(field, val) => updateScore(index, field, val)}
                                 onFinish={() => finishMatch(index)}
+                                onEdit={() => editMatch(index)} // Pass edit handler
                                 label={match.round}
                                 readOnly={!isAdmin} // Pass readOnly
                             />
@@ -277,38 +359,58 @@ export const Tournament3View = ({ onBack, onToggleUI, isAdmin }) => {
                 <div className="space-y-6">
                     <h2 className="text-xl font-bold text-gray-400 uppercase tracking-widest border-b border-white/10 pb-2">Tabla de Posiciones</h2>
                     <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
-                        <table className="w-full text-left">
+                        <table className="data-table">
                             <thead>
-                                <tr className="bg-white/5 border-b border-white/10">
-                                    <th className="p-4 text-xs font-bold text-gray-400 uppercase">Pos</th>
-                                    <th className="p-4 text-xs font-bold text-gray-400 uppercase">Jugador</th>
-                                    <th className="p-4 text-center text-xs font-bold text-gray-400 uppercase">PTS</th>
-                                    <th className="p-4 text-center text-xs font-bold text-gray-400 uppercase">GF</th>
-                                    <th className="p-4 text-center text-xs font-bold text-gray-400 uppercase">GC</th>
+                                <tr className="table-head-row">
+                                    <th className="p-3 text-center w-12">Pos</th>
+                                    <th className="p-3">Jugador</th>
+                                    <th className="p-3 text-center">PTS</th>
+                                    <th className="p-3 text-center">PJ</th>
+                                    <th className="p-3 text-center">G</th>
+                                    <th className="p-3 text-center">E</th>
+                                    <th className="p-3 text-center">P</th>
+                                    <th className="p-3 text-center">GF</th>
+                                    <th className="p-3 text-center">GC</th>
+                                    <th className="p-3 text-center">DG</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {standings.length > 0 ? standings.map((row, i) => (
-                                    <tr key={i} className={`border-b border-white/5 transition-colors ${i === 0 ? 'bg-[#ccff00]/10' : 'hover:bg-white/5'}`}>
-                                        <td className="p-4 font-mono font-bold text-white/50">#{i + 1}</td>
-                                        <td className="p-4 flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden">
-                                                {row.player.image ? <img src={row.player.image} className="w-full h-full object-cover" /> : null}
+                                    <tr key={i} className="table-row">
+                                        <td className={`p-3 text-center font-bold ${i === 0 ? 'text-yellow-400' : 'text-white/50'}`}>{i + 1}</td>
+                                        <td className="p-3 font-bold player-cell">
+                                            <div className="player-avatar-small">
+                                                {row.player.image ? <img src={row.player.image} alt={row.player.name} /> : <span>{row.player.name.charAt(0)}</span>}
                                             </div>
-                                            <span className={`font-bold ${i === 0 ? 'text-[#ccff00]' : 'text-white'}`}>{row.player.name}</span>
+                                            {row.player.name}
                                         </td>
-                                        <td className="p-4 text-center font-black text-xl text-white">{row.points}</td>
-                                        <td className="p-4 text-center font-mono text-white/70">{row.gf}</td>
-                                        <td className="p-4 text-center font-mono text-white/70">{row.gc}</td>
+                                        <td className="p-3 text-center font-bold text-xl text-[--primary]">{row.points}</td>
+                                        <td className="p-3 text-center text-white/70">{row.played}</td>
+                                        <td className="p-3 text-center text-green-400/80">{row.won}</td>
+                                        <td className="p-3 text-center text-yellow-400/80">{row.drawn}</td>
+                                        <td className="p-3 text-center text-red-400/80">{row.lost}</td>
+                                        <td className="p-3 text-center text-white/60">{row.gf}</td>
+                                        <td className="p-3 text-center text-white/60">{row.gc}</td>
+                                        <td className="p-3 text-center text-white/40 font-mono text-sm">{row.gf - row.gc > 0 ? `+${row.gf - row.gc}` : row.gf - row.gc}</td>
                                     </tr>
                                 )) : (
                                     selectedPlayers.map((p, i) => (
-                                        <tr key={p.id} className="border-b border-white/5 text-white/30">
-                                            <td className="p-4">-</td>
-                                            <td className="p-4">{p.name}</td>
-                                            <td className="p-4 text-center">0</td>
-                                            <td className="p-4 text-center">0</td>
-                                            <td className="p-4 text-center">0</td>
+                                        <tr key={p.id} className="table-row text-white/30">
+                                            <td className="p-3 text-center">-</td>
+                                            <td className="p-3 font-bold player-cell">
+                                                <div className="player-avatar-small grayscale opacity-50">
+                                                    {p.image ? <img src={p.image} /> : <span>{p.name[0]}</span>}
+                                                </div>
+                                                {p.name}
+                                            </td>
+                                            <td className="p-3 text-center">0</td>
+                                            <td className="p-3 text-center">0</td>
+                                            <td className="p-3 text-center">-</td>
+                                            <td className="p-3 text-center">-</td>
+                                            <td className="p-3 text-center">-</td>
+                                            <td className="p-3 text-center">0</td>
+                                            <td className="p-3 text-center">0</td>
+                                            <td className="p-3 text-center">0</td>
                                         </tr>
                                     ))
                                 )}

@@ -1,7 +1,7 @@
 import React from 'react';
 import MatchVersus from './MatchVersus';
 
-const TournamentBracket = ({ stages, onUpdateScore, onFinishMatch, readOnly = false }) => {
+const TournamentBracket = ({ stages, onUpdateScore, onFinishMatch, onEditMatch, readOnly = false }) => {
     // stages: { semi1, semi2, final, thirdPlace }
 
     const renderMatchList = (stageKey, title, matches) => {
@@ -19,6 +19,7 @@ const TournamentBracket = ({ stages, onUpdateScore, onFinishMatch, readOnly = fa
                             isFinished={match.isFinished}
                             onScoreChange={(field, val) => onUpdateScore(stageKey, index, field, val)}
                             onFinish={() => onFinishMatch(stageKey, index)}
+                            onEdit={() => onEditMatch && onEditMatch(stageKey, index)}
                             label="VS"
                             readOnly={readOnly}
                         />
